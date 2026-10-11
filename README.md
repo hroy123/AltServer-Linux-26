@@ -2,6 +2,8 @@
 
 AltServer-Linux-26 is an updated version of [NyaMisty's AltServer-Linux](https://github.com/NyaMisty/AltServer-Linux) for current Apple authentication and iOS/iPadOS 26 signing requirements.
 
+This update also owes a great deal to the Rust-based [`isideload`](https://github.com/nab138/isideload) project and [`SideSign`](https://github.com/SideStore/SideSign), whose working implementations were instrumental in resolving the modern Apple authentication and iOS signing issues encountered here. AI-assisted analysis and coding were equally essential; without it, I would not have been able to carry a project like this through to completion.
+
 This project was developed and tested on an Orange Pi Zero 2 running AArch64 Debian/Armbian. The current source can authenticate with Apple, obtain application tokens, sign AltStore with an Apple development certificate, install it over USB, launch it on iPadOS 26, and support Wi-Fi refresh through netmuxd.
 
 The repository keeps the known-working patched AltServer, AltSign, and ldid source trees directly in the project so the exact code used for the successful build is preserved and can be reproduced from a fresh clone.
