@@ -1,1 +1,1 @@
-altsign_include := -I$(BUILD_DIR)/AltSign_patched
+altsign_include := -I$(MAIN_DIR)/AltSign_patched
