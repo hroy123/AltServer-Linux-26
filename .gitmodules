@@ -1,7 +1,3 @@
-[submodule "AltServer-Windows"]
-	path = upstream_repo
-	url = https://github.com/rileytestut/AltServer-Windows
-	branch = develop
 [submodule "libraries/libplist"]
 	path = libraries/libplist
 	url = https://github.com/libimobiledevice/libplist
