@@ -1,106 +1,144 @@
 # AltServer-Linux-26
 
-This is an update of **NyaMisty's AltServer-Linux** for current Apple GrandSlam authentication and iOS/iPadOS 26 code-signing requirements.
+AltServer-Linux-26 is an updated version of [NyaMisty's AltServer-Linux](https://github.com/NyaMisty/AltServer-Linux) for current Apple authentication and iOS/iPadOS 26 signing requirements.
 
-This repository was reconstructed from the source tree that successfully built and ran on an Orange Pi Zero 2 (AArch64). The immediate goal is reproducibility: clone this repository on a clean machine, build it, install AltStore, launch it, and verify Wi-Fi refresh.
+The project was updated and tested on an Orange Pi Zero 2 running AArch64 Debian/Armbian. The current source can authenticate with Apple, obtain application tokens, sign AltStore with an Apple development certificate, install it over USB, launch it on iPadOS 26, and support Wi-Fi refresh through netmuxd.
 
-## Main changes
+The repository keeps the known-working patched AltServer, AltSign, and ldid source trees directly in the project so the exact code used for the successful build is preserved and can be reproduced from a fresh clone.
 
-| File / component | Change |
-| --- | --- |
-| `AltSign_patched/AppleAPI+Authentication.cpp` | Updated GrandSlam authentication path, including SRP verification, SPD processing/decryption and app-token handling. |
-| `AltSign_patched/AppleAPI.cpp` | Apple API request behavior used by the working authentication build. |
-| `ldid_patched/ldid.cpp` | iOS 26-compatible signer with dual SHA-1/SHA-256 CodeDirectories, DER entitlements, designated requirements, CMS hash-agility attributes, nested signing behavior and correct executable-segment flags. |
-| `AltServer_patched/` | Checked-in Linux-patched AltServer sources from the known-working build. |
-| `src/AnisetteDataManager.cpp` | Treats Apple's `X-Apple-I-Client-Time` as UTC using `timegm()`. |
-| `makefiles/AltSign-build/AltSign.mak` | Builds the checked-in working `AltSign_patched` and `ldid_patched` sources directly. |
-| `Makefile` | Builds directly from the checked-in working AltServer sources and uses the static linker ordering required by the tested AArch64 build, including `-lpthread -ldl`. |
-| `upstream_repo/` | Vendored upstream AltServer/AltSign source used for headers, dependencies and reference; retained as ordinary repository content so the working tree is self-contained. |
+## Apple authentication
 
-## Tested working configuration
+Apple's GrandSlam authentication flow has changed since the original AltServer-Linux implementation. The authentication code in this repository was updated to work with the current protocol.
 
-The source snapshot imported into this repository had been tested with:
+The updated implementation completes the GrandSlam exchange, verifies the SRP server proof, derives the current SPD encryption keys from the raw SRP premaster secret, decrypts the SPD payload, and retrieves the application tokens used by AltServer.
+
+The existing anisette mechanism is retained, including support for a custom anisette server through the `ALTSERVER_ANISETTE_SERVER` environment variable.
+
+## iOS 26 code signing
+
+The bundled ldid implementation has been updated to generate signatures accepted by current iOS/iPadOS 26 devices.
+
+The signer generates SHA-1 and SHA-256 CodeDirectories, XML and DER entitlements, designated requirements, the required special-slot layout, and CMS hash-agility attributes expected by current Apple signing behavior.
+
+Executable-segment flags are also generated correctly for main executables and nested code. Nested frameworks and application components are signed using the behavior required by the parent application.
+
+## Linux build changes
+
+The Linux build system has been adjusted to compile the known-working patched AltServer, AltSign, and ldid sources directly from this repository rather than regenerating them from older upstream source during each build.
+
+The linker configuration has also been updated for the tested AArch64 Linux build. Anisette client timestamps are generated as UTC.
+
+The upstream AltServer/AltSign tree is retained in `upstream_repo/` for headers, dependencies, and reference.
+
+## Current status
+
+The current source has been tested with:
 
 - Orange Pi Zero 2
-- AArch64
-- Armbian / Debian Bullseye
+- AArch64 Debian/Armbian
 - iPadOS 26.6.1
-- GrandSlam authentication: working
-- AltStore installation over USB: working
-- AltStore launch: working
-- Wi-Fi refresh via netmuxd: working
+- Apple GrandSlam authentication
+- application-token retrieval
+- AltStore signing
+- USB installation through usbmuxd
+- successful AltStore launch
+- Wi-Fi refresh through netmuxd
 
-The GitHub-cleaned repository still needs a **fresh-clone build test**. That is the next validation step.
+Very large applications can require substantially more memory during Mach-O signing. Large-IPA behavior is still being investigated.
 
-## Build test
+## Compilation
 
-Clone the repository and build in a separate build directory:
+Clone the repository and its submodules:
 
 ```bash
 git clone --recursive https://github.com/hroy123/AltServer-Linux-26.git
 cd AltServer-Linux-26
-
-mkdir build
-cd build
-make -f ../Makefile -j3
 ```
 
-On AArch64 the resulting executable should be:
+Create a build directory:
+
+```bash
+mkdir build
+cd build
+```
+
+Build AltServer:
+
+```bash
+make -f ../Makefile -j1
+```
+
+For troubleshooting, save the full build output:
+
+```bash
+make -f ../Makefile -j1 > ~/altserver-build.log 2>&1
+```
+
+On AArch64 the resulting executable is:
 
 ```text
 AltServer-aarch64
 ```
 
-This project still requires the original AltServer-Linux static build dependencies, including CoreCrypto, cpprestsdk, Boost, libzip/zlib and the libimobiledevice/libplist-related dependencies.
+The project requires the usual AltServer-Linux build dependencies, including OpenSSL, CoreCrypto, cpprestsdk, Boost, libzip/zlib, libplist, libimobiledevice, and related usbmuxd components.
 
 ## Usage
 
-Install an IPA:
+### Run AltServer
 
-```bash
-./AltServer-aarch64 -u UDID -a APPLE_ID -p PASSWORD app.ipa
-```
-
-Run as the AltServer daemon:
+Run AltServer as a daemon:
 
 ```bash
 ./AltServer-aarch64
 ```
 
-For the current command-line options:
+Display the available options:
 
 ```bash
 ./AltServer-aarch64 -h
 ```
 
-### Anisette server
+### Install an IPA over USB
 
-The existing AltServer-Linux anisette-server mechanism is retained. A custom server can be selected with:
+Connect and trust the iPhone or iPad, then obtain its UDID:
 
 ```bash
-export ALTSERVER_ANISETTE_SERVER="http://your-anisette-server/"
+idevice_id -l
+```
+
+Install an IPA with:
+
+```bash
+./AltServer-aarch64 -u DEVICE_UDID -a APPLE_ID -p APPLE_ID_PASSWORD /path/to/application.ipa
+```
+
+### Use a custom anisette server
+
+Set the anisette server before running AltServer:
+
+```bash
+export ALTSERVER_ANISETTE_SERVER="http://127.0.0.1:6970"
+./AltServer-aarch64
 ```
 
 ### Wi-Fi refresh
 
-Wi-Fi transport continues to use netmuxd as in NyaMisty's AltServer-Linux.
+Wi-Fi refresh can be provided through netmuxd. Run netmuxd in place of the standard usbmuxd service as required by your setup, then run AltServer as a background service or daemon.
 
-## What was deliberately removed
+## Repository layout
 
-The repository excludes local build products, static libraries, object files, debugging backups, developer certificates, private keys, provisioning profiles, pairing files and signed application bundles.
+`AltServer_patched/` contains the known-working AltServer source used by the Linux build.
 
-The three `*_patched` source directories are **not build junk in this repository**: they contain the known-working source snapshot and are intentionally tracked.
+`AltSign_patched/` contains the known-working AltSign source, including the updated Apple authentication implementation.
+
+`ldid_patched/` contains the iOS 26-compatible signing implementation.
+
+`src/` contains Linux-specific overrides used by the main AltServer build.
+
+`upstream_repo/` contains the vendored upstream AltServer/AltSign source used for dependencies and reference.
 
 ## Credits
 
-This project builds on:
-
-- [NyaMisty/AltServer-Linux](https://github.com/NyaMisty/AltServer-Linux)
-- AltServer / AltSign by Riley Testut and contributors
-- ldid and its upstream contributors
-- Kabir Oberai's authentication work, credited by the upstream source
-- libimobiledevice and related open-source dependencies
-
-The current compatibility work was developed by comparing the Linux implementation with known-working Apple/AltServer behavior and validating both the GrandSlam authentication path and the generated iOS code-signature structures.
+This project builds on NyaMisty's AltServer-Linux, Riley Testut and the AltStore/AltServer/AltSign contributors, ldid and its contributors, Kabir Oberai's authentication work referenced by the upstream source, and the libimobiledevice ecosystem.
 
 This is an independent community project and is not an official AltStore release.
