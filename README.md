@@ -141,6 +141,8 @@ export ALTSERVER_ANISETTE_SERVER="http://127.0.0.1:6970"
 
 Wi-Fi refresh can be provided through netmuxd. Run netmuxd in place of the standard usbmuxd service as required by your setup, then run AltServer as a background service or daemon.
 
+For unattended re-signing over Wi-Fi, both netmuxd and AltServer can be run inside persistent `screen` sessions. This keeps the processes alive after you disconnect from SSH and allows AltStore to refresh apps over Wi-Fi without keeping an interactive terminal open.
+
 ## Repository layout
 
 `AltServer_patched/` contains the known-working AltServer source used by the Linux build.
