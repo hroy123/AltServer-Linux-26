@@ -155,9 +155,9 @@ Wi-Fi refresh can be provided through netmuxd. Run netmuxd in place of the stand
 
 This project builds on NyaMisty's AltServer-Linux, Riley Testut and the AltStore/AltServer/AltSign contributors, ldid and its contributors, Kabir Oberai's authentication work referenced by the upstream source, and the libimobiledevice ecosystem.
 
-The developers and contributors of the Rust-based `isideload` implementation were instrumental in resolving the current Apple GrandSlam authentication path, especially the SRP/SPD key-derivation and application-token behavior.
+The developers and contributors of the Rust-based [`isideload`](https://github.com/nab138/isideload) implementation were instrumental in resolving the current Apple GrandSlam authentication path, especially the SRP/SPD key-derivation and application-token behavior.
 
-The developers and contributors of SideSign were also instrumental in resolving modern iOS signing issues by providing a working implementation for comparison, particularly around current entitlements, CodeDirectory/CMS signing behavior, and executable signing requirements.
+The developers and contributors of [`SideSign`](https://github.com/SideStore/SideSign) were also instrumental in resolving modern iOS signing issues by providing a working implementation for comparison, particularly around current entitlements, CodeDirectory/CMS signing behavior, and executable signing requirements.
 
 AI-assisted analysis and coding were essential throughout this project. It was used extensively to compare implementations, isolate protocol differences, interpret signing structures, trace low-level failures, and iteratively test fixes across the authentication and code-signing paths.
 
