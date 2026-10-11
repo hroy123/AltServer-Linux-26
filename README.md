@@ -1,73 +1,106 @@
-# AltServer-Linux
-AltServer for AltStore, but on-device
+# AltServer-Linux-26
+
+This is an update of **NyaMisty's AltServer-Linux** for current Apple GrandSlam authentication and iOS/iPadOS 26 code-signing requirements.
+
+This repository was reconstructed from the source tree that successfully built and ran on an Orange Pi Zero 2 (AArch64). The immediate goal is reproducibility: clone this repository on a clean machine, build it, install AltStore, launch it, and verify Wi-Fi refresh.
+
+## Main changes
+
+| File / component | Change |
+| --- | --- |
+| `AltSign_patched/AppleAPI+Authentication.cpp` | Updated GrandSlam authentication path, including SRP verification, SPD processing/decryption and app-token handling. |
+| `AltSign_patched/AppleAPI.cpp` | Apple API request behavior used by the working authentication build. |
+| `ldid_patched/ldid.cpp` | iOS 26-compatible signer with dual SHA-1/SHA-256 CodeDirectories, DER entitlements, designated requirements, CMS hash-agility attributes, nested signing behavior and correct executable-segment flags. |
+| `AltServer_patched/` | Checked-in Linux-patched AltServer sources from the known-working build. |
+| `src/AnisetteDataManager.cpp` | Treats Apple's `X-Apple-I-Client-Time` as UTC using `timegm()`. |
+| `makefiles/AltSign-build/AltSign.mak` | Builds the checked-in working `AltSign_patched` and `ldid_patched` sources directly. |
+| `Makefile` | Builds directly from the checked-in working AltServer sources and uses the static linker ordering required by the tested AArch64 build, including `-lpthread -ldl`. |
+| `upstream_repo/` | Vendored upstream AltServer/AltSign source used for headers, dependencies and reference; retained as ordinary repository content so the working tree is self-contained. |
+
+## Tested working configuration
+
+The source snapshot imported into this repository had been tested with:
+
+- Orange Pi Zero 2
+- AArch64
+- Armbian / Debian Bullseye
+- iPadOS 26.6.1
+- GrandSlam authentication: working
+- AltStore installation over USB: working
+- AltStore launch: working
+- Wi-Fi refresh via netmuxd: working
+
+The GitHub-cleaned repository still needs a **fresh-clone build test**. That is the next validation step.
+
+## Build test
+
+Clone the repository and build in a separate build directory:
+
+```bash
+git clone --recursive https://github.com/hroy123/AltServer-Linux-26.git
+cd AltServer-Linux-26
+
+mkdir build
+cd build
+make -f ../Makefile -j3
+```
+
+On AArch64 the resulting executable should be:
+
+```text
+AltServer-aarch64
+```
+
+This project still requires the original AltServer-Linux static build dependencies, including CoreCrypto, cpprestsdk, Boost, libzip/zlib and the libimobiledevice/libplist-related dependencies.
 
 ## Usage
 
-- Install IPA: `./AltServer -u [UDID] -a [AppleID account] -p [AppleID password] [ipaPath.ipa]`
-- Running as AltServer Daemon: `./AltServer`
-- Full usage (maybe outdated, refer to `./AltServer -h` for the newest):
-```
-Usage:  AltServer-Linux options [ ipa-file ]
-  -h  --help             Display this usage information.
-  -u  --udid UDID        Device's UDID, only needed when installing IPA.
-  -a  --appleID AppleID  Apple ID to sign the ipa, only needed when installing IPA.
-  -p  --password passwd  Password of Apple ID, only needed when installing IPA.
-  -d  --debug            Print debug output, can be used several times to increase debug level.
+Install an IPA:
 
-The following environment var can be set for some special situation:
-  - ALTSERVER_ANISETTE_SERVER: Set to custom anisette server URL
-          if not set, the default one: https://armconverter.com/anisette/irGb3Quww8zrhgqnzmrx, is used
-  - ALTSERVER_NO_SUBSCRIBE: (*unused*) Please enable this for usbmuxd server that do not correctly usbmuxd_listen interfaces
+```bash
+./AltServer-aarch64 -u UDID -a APPLE_ID -p PASSWORD app.ipa
 ```
 
-## Download
+Run as the AltServer daemon:
 
-- Precompiled static binary can be downloaded in Release ( also have a look at pre-release ;) )
-- Nightly version is available as Github Actions artifacts
+```bash
+./AltServer-aarch64
+```
 
-## TODO / Special Features
-- [x] Track upstream (AltServer-Windows) develop branch (i.e. Beta version)
-- [x] Support Offline Anisette Data Generation (i.e. without Sideloadly)
-  - Finsihed, please run [alt_anisette_server](https://hub.docker.com/r/nyamisty/alt_anisette_server) & use `ALTSERVER_ANISETTE_SERVER` to specify custom server URL
-- [x] Support Wi-Fi Refresh
-  - [netmuxd](https://github.com/jkcoxson/netmuxd) now supports network devices (needs version > v0.1.1, be sure to check pre-release)
-    - Download `netmuxd`, stop the original `usbmuxd`, and run `netmuxd` before running `AltServer-Linux`
-    - ~If netmuxd does not work, please try using special env var `ALTSERVER_NO_SUBSCRIBE`. Enabling this would disable **auto-refresh when plugged-in** of USB devices~
+For the current command-line options:
 
-----
+```bash
+./AltServer-aarch64 -h
+```
 
-## Advanced: Build Instruction (check Github Actions if you cannot build)
+### Anisette server
 
-- Preparation: `git clone --recursive https://github.com/NyaMisty/AltServer-Linux`
+The existing AltServer-Linux anisette-server mechanism is retained. A custom server can be selected with:
 
-- Install dependencies (see notes below): corecrypto_static, cpprestsdk static lib, boost static lib
+```bash
+export ALTSERVER_ANISETTE_SERVER="http://your-anisette-server/"
+```
 
-- Build:
-  ```
-  cd AltServer-Linux
-  mkdir build
-  make -f ../Makefile -j3
-  ls AltServer-*
-  ```
+### Wi-Fi refresh
 
-- My own build note for you 
-  ```
-    1. Run alpine docker (change --platform to corresponding architecture you want): 
-        docker run --platform=linux/arm/v7 --name altserver-builder-alpine-armv7 -it alpine:3.15 
-    2. Install dependencies:
-        apk add zsh git curl wget g++ clang boost-static ninja boost-dev cmake make sudo bash vim libressl-dev util-linux-dev zlib-dev zlib-static
-    3. Install corecrypto
-        download corecrypto from apple website, unzip corecrypto.zip; cd corecrypto; mkdir build; cd build; CC=clang CXX=clang++ cmake ..;
-        vim CMakeFiles/Makefile2, delete line starts with "all: corecrypto_perf/....." and "all: corecrypto_test/.....", then make; make install
-    4. Install cpprestsdk
-        git clone --recursive https://github.com/microsoft/cpprestsdk; cd cpprestsdk; mkdir build; cmake -DBUILD_SHARED_LIBS=0 ..; make; make install
-	    (if you're compiling for armv7, you have to grep -Wcast-align, and remove it, or the compiling would fail)
-    5. Install libzip
-        git clone https://github.com/nih-at/libzip; cd libzip; mkdir build; cd build; cmake -DBUILD_SHARED_LIBS=0 ..; make; make install
-    6. Compile AltServer-Linux
-        git clone --recursive https://github.com/NyaMisty/AltServer-Linux
-        cd AltServer-Linux
-        make -f ../Makefile -j3
-	    (if you're compiling for ARM, i.e. armv7 or aarch64, you'll have to remove the -mno-default flag in Makefile)
+Wi-Fi transport continues to use netmuxd as in NyaMisty's AltServer-Linux.
 
-  ```
+## What was deliberately removed
+
+The repository excludes local build products, static libraries, object files, debugging backups, developer certificates, private keys, provisioning profiles, pairing files and signed application bundles.
+
+The three `*_patched` source directories are **not build junk in this repository**: they contain the known-working source snapshot and are intentionally tracked.
+
+## Credits
+
+This project builds on:
+
+- [NyaMisty/AltServer-Linux](https://github.com/NyaMisty/AltServer-Linux)
+- AltServer / AltSign by Riley Testut and contributors
+- ldid and its upstream contributors
+- Kabir Oberai's authentication work, credited by the upstream source
+- libimobiledevice and related open-source dependencies
+
+The current compatibility work was developed by comparing the Linux implementation with known-working Apple/AltServer behavior and validating both the GrandSlam authentication path and the generated iOS code-signature structures.
+
+This is an independent community project and is not an official AltStore release.
