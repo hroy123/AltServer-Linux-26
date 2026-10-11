@@ -162,3 +162,52 @@ The developers and contributors of [`SideSign`](https://github.com/SideStore/Sid
 AI-assisted analysis and coding were essential throughout this project. It was used extensively to compare implementations, isolate protocol differences, interpret signing structures, trace low-level failures, and iteratively test fixes across the authentication and code-signing paths.
 
 This is an independent community project and is not an official AltStore release.
+
+## Dependencies
+
+For USB installation on Debian/Armbian, install the required device communication tools:
+
+```bash
+sudo apt update
+sudo apt install usbmuxd libimobiledevice-utils
+```
+
+These provide the standard usbmuxd service and utilities such as `idevice_id`, `ideviceinfo`, and `idevicepair`.
+
+## Minimal AltStore install example
+
+The following small shell example asks you to connect the iPhone/iPad by USB, detects its UDID, asks for your Apple ID and password, and then runs AltServer to install `AltStore.ipa`.
+
+```bash
+#!/usr/bin/env bash
+set -e
+
+echo "Connect your iPhone/iPad by USB, unlock it, and tap Trust if prompted."
+read -rp "Press Enter when the device is connected..."
+
+UDID="$(idevice_id -l | head -n 1)"
+
+if [ -z "$UDID" ]; then
+    echo "No USB device detected."
+    exit 1
+fi
+
+echo "Detected device: $UDID"
+
+read -rp "Apple ID: " APPLE_ID
+read -rsp "Apple ID password: " APPLE_PASSWORD
+echo
+
+./AltServer-aarch64 \
+    -u "$UDID" \
+    -a "$APPLE_ID" \
+    -p "$APPLE_PASSWORD" \
+    AltStore.ipa
+```
+
+If you use a local anisette server, export it before running the script:
+
+```bash
+export ALTSERVER_ANISETTE_SERVER="http://127.0.0.1:6970"
+```
+
