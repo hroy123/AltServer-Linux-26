@@ -1,14 +1,14 @@
 /build
 *.o
-.vscode
-# Build outputs
-AltServer-aarch64
-AltSign.a
-dnssd_loader.a
-libimobiledevice.a
-libplist.a
-*.o
 *.a
+*.so
+*.pyc
+.vscode/
+
+# Local build outputs
+AltServer-aarch64
+AltServer-armv7l
+AltServer-x86_64
 
 # Backup/debug files
 *.old
@@ -19,3 +19,13 @@ libplist.a
 *.original
 *.bak
 *~
+
+# Signing/private material must never be committed
+*.p12
+*.pfx
+*.mobileprovision
+*.pem
+*.key
+*.cer
+*.crt
+ALTPairingFile.dat
