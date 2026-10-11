@@ -59,16 +59,14 @@ INC_CFLAGS += $(dnssd_loader_include)
 
 include $(ROOT_DIR)/makefiles/AltWindowsShim.mak
 
-main_srcroot := $(UPSTREAM_DIR)/AltServer
+main_patched_root := $(ROOT_DIR)/AltServer_patched
 main_override_srcroot := $(ROOT_DIR)/src
 main_override_src := $(wildcard $(main_override_srcroot)/*.cpp)
 
-main_orisrc := $(wildcard $(main_srcroot)/*.cpp) $(wildcard $(main_srcroot)/*.c)
-
-main_orisrc := $(filter-out $(main_srcroot)/AltServer.cpp, $(main_orisrc))
-main_orisrc := $(filter-out $(main_override_src:$(main_override_srcroot)/%=$(main_srcroot)/%), $(main_orisrc))
-#main_orisrc := $(filter-out $(main_srcroot)/AltServerApp.cpp, $(main_orisrc))
-#main_orisrc := $(filter-out $(main_srcroot)/AnisetteDataManager.cpp, $(main_orisrc))
+# Build directly from the checked-in, known-working patched AltServer sources.
+main_orisrc := $(wildcard $(main_patched_root)/*.cpp) $(wildcard $(main_patched_root)/*.c)
+main_orisrc := $(filter-out $(main_patched_root)/AltServer.cpp, $(main_orisrc))
+main_orisrc := $(filter-out $(main_override_src:$(main_override_srcroot)/%=$(main_patched_root)/%), $(main_orisrc))
 
 #$(BUILD_DIR)/objs/%.c.o : $(BUILD_DIR)/%.c
 #	python3 $(ROOT_DIR)/makefiles/AltSign-build/rewrite_altserver_source.py "$<" | $(CC) -x c -I`dirname $<` $(CFLAGS) $(EXTRA_FLAGS) -o $@ -c -
@@ -78,17 +76,7 @@ main_orisrc := $(filter-out $(main_override_src:$(main_override_srcroot)/%=$(mai
 #	python3 $(ROOT_DIR)/makefiles/AltSign-build/rewrite_altserver_source.py "$<" | $(CXX) -x c++ -I`dirname $<` $(CXXFLAGS) $(EXTRA_FLAGS) -o $@ -c -
 #	#$(CXX) $(CXXFLAGS) $(EXTRA_FLAGS) -o $@ -c $<
 
-main_patched_root := $(BUILD_DIR)/AltServer_patched
-main_orifiles := $(wildcard $(main_srcroot)/*.*)
-main_newfiles := $(main_orifiles:$(main_srcroot)/%=$(main_patched_root)/%)
-
-$(main_patched_root)/%: $(main_srcroot)/%
-	mkdir -p `dirname "$@"`
-	python3 $(ROOT_DIR)/makefiles/rewrite_altserver_source.py "$<" > $@
-
-$(main_newfiles) : $(main_orifiles)
-
-preprocess : $(main_newfiles)
+preprocess :
 .PHONY : preprocess
 
 
@@ -108,10 +96,9 @@ $(BUILD_DIR)/objs/%.cpp.o : $(ROOT_DIR)/%.cpp
 	mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(EXTRA_FLAGS) -o $@ -c $<
 
-main_newsrc := $(main_orisrc:$(main_srcroot)/%=$(main_patched_root)/%)
-#main_objs = $(main_orisrc:$(UPSTREAM_DIR)/%=$(BUILD_DIR)/objs/%.o)
+main_newsrc := $(main_orisrc)
 
-main_objs = $(main_newsrc:$(BUILD_DIR)/%=$(BUILD_DIR)/objs/%.o) $(main_override_src:$(ROOT_DIR)/%=$(BUILD_DIR)/objs/%.o) $(shim_src:$(MAIN_DIR)/%=$(BUILD_DIR)/objs/%.o)
+main_objs = $(main_newsrc:$(ROOT_DIR)/%=$(BUILD_DIR)/objs/%.o) $(main_override_src:$(ROOT_DIR)/%=$(BUILD_DIR)/objs/%.o) $(shim_src:$(MAIN_DIR)/%=$(BUILD_DIR)/objs/%.o)
 
 $(main_objs) : lib_AltSign lib_libimobiledevice lib_dnssd_loader
 
