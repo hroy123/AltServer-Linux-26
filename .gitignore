@@ -1,3 +1,21 @@
 /build
 *.o
 .vscode
+# Build outputs
+AltServer-aarch64
+AltSign.a
+dnssd_loader.a
+libimobiledevice.a
+libplist.a
+*.o
+*.a
+
+# Backup/debug files
+*.old
+*.save
+*.before-*
+*.before-sync
+*.modified
+*.original
+*.bak
+*~
