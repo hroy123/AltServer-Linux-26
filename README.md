@@ -2,7 +2,7 @@
 
 AltServer-Linux-26 is an updated version of [NyaMisty's AltServer-Linux](https://github.com/NyaMisty/AltServer-Linux) for current Apple authentication and iOS/iPadOS 26 signing requirements.
 
-The project was updated and tested on an Orange Pi Zero 2 running AArch64 Debian/Armbian. The current source can authenticate with Apple, obtain application tokens, sign AltStore with an Apple development certificate, install it over USB, launch it on iPadOS 26, and support Wi-Fi refresh through netmuxd.
+This project was developed and tested on an Orange Pi Zero 2 running AArch64 Debian/Armbian. The current source can authenticate with Apple, obtain application tokens, sign AltStore with an Apple development certificate, install it over USB, launch it on iPadOS 26, and support Wi-Fi refresh through netmuxd.
 
 The repository keeps the known-working patched AltServer, AltSign, and ldid source trees directly in the project so the exact code used for the successful build is preserved and can be reproduced from a fresh clone.
 
@@ -44,7 +44,21 @@ The current source has been tested with:
 - successful AltStore launch
 - Wi-Fi refresh through netmuxd
 
-Very large applications can require substantially more memory during Mach-O signing. Large-IPA behavior is still being investigated.
+### Large IPA installs
+
+On the Orange Pi test system, large IPAs can exhaust the default RAM-backed `/tmp` filesystem during signing even when the root filesystem still has plenty of free space. A simple workaround is to temporarily increase the size of `/tmp` before installing the IPA:
+
+```bash
+sudo mount -o remount,size=1G /tmp
+```
+
+You can verify the new size with:
+
+```bash
+df -h /tmp
+```
+
+This was necessary for a large YouTube-based IPA whose main Mach-O executable was much larger than AltStore's.
 
 ## Compilation
 
@@ -140,5 +154,11 @@ Wi-Fi refresh can be provided through netmuxd. Run netmuxd in place of the stand
 ## Credits
 
 This project builds on NyaMisty's AltServer-Linux, Riley Testut and the AltStore/AltServer/AltSign contributors, ldid and its contributors, Kabir Oberai's authentication work referenced by the upstream source, and the libimobiledevice ecosystem.
+
+The developers and contributors of the Rust-based `isideload` implementation were instrumental in resolving the current Apple GrandSlam authentication path, especially the SRP/SPD key-derivation and application-token behavior.
+
+The developers and contributors of SideSign were also instrumental in resolving modern iOS signing issues by providing a working implementation for comparison, particularly around current entitlements, CodeDirectory/CMS signing behavior, and executable signing requirements.
+
+AI-assisted analysis and coding were essential throughout this project. It was used extensively to compare implementations, isolate protocol differences, interpret signing structures, trace low-level failures, and iteratively test fixes across the authentication and code-signing paths.
 
 This is an independent community project and is not an official AltStore release.
