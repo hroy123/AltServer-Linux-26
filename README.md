@@ -159,18 +159,6 @@ systemctl status netmuxd-26.service altserver-26.service
 
 The services will then be started automatically on future boots. To inspect logs, use `journalctl -u altserver-26.service -u netmuxd-26.service -f`. The startup helper is provided as a convenience and has not yet been validated on a clean installation; check the netmuxd service's arguments and your local usbmuxd arrangement before enabling it.
 
-## Repository layout
-
-`AltServer_patched/` contains the known-working AltServer source used by the Linux build.
-
-`AltSign_patched/` contains the known-working AltSign source, including the updated Apple authentication implementation.
-
-`ldid_patched/` contains the iOS 26-compatible signing implementation.
-
-`src/` contains Linux-specific overrides used by the main AltServer build.
-
-`upstream_repo/` contains the vendored upstream AltServer/AltSign source used for dependencies and reference.
-
 ## Credits
 
 This project builds on NyaMisty's AltServer-Linux, Riley Testut and the AltStore/AltServer/AltSign contributors, ldid and its contributors, Kabir Oberai's authentication work referenced by the upstream source, and the libimobiledevice ecosystem.
