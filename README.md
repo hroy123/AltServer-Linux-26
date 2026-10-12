@@ -2,6 +2,8 @@
 
 AltServer-Linux-26 is an updated version of [NyaMisty's AltServer-Linux](https://github.com/NyaMisty/AltServer-Linux) for current Apple authentication and iOS/iPadOS 26 signing requirements.
 
+**Companion project:** [Anisette-Server-26](https://github.com/hroy123/Anisette-server-26), the tested Anisette server for this AltServer build.
+
 This update also owes a great deal to the Rust-based [`isideload`](https://github.com/nab138/isideload) project and [`SideSign`](https://github.com/SideStore/SideSign), whose working implementations were instrumental in resolving the modern Apple authentication and iOS signing issues encountered here. AI-assisted analysis and coding were equally essential; without it, I would not have been able to carry a project like this through to completion.
 
 This project was developed and tested on an Orange Pi Zero 2 running AArch64 Debian/Armbian. The current source can authenticate with Apple, obtain application tokens, sign AltStore with an Apple development certificate, install it over USB, launch it on iPadOS 26, and support Wi-Fi refresh through netmuxd or usbmuxd.
@@ -81,7 +83,7 @@ The project requires the usual AltServer-Linux build dependencies, including Ope
 
 ### Run AltServer
 
-Run AltServer as a daemon:
+Run AltServer in the foreground:
 
 ```bash
 ./AltServer-aarch64
@@ -109,18 +111,57 @@ Install an IPA with:
 
 ### Use a custom anisette server
 
-Set the anisette server before running AltServer:
+**Use this AltServer-Linux-26 build together with [Anisette-Server-26](https://github.com/hroy123/Anisette-server-26)**, installed and running on the same Orange Pi. Set its address before starting AltServer:
 
 ```bash
 export ALTSERVER_ANISETTE_SERVER="http://127.0.0.1:6970"
 ./AltServer-aarch64
 ```
 
-### Wi-Fi refresh
+### Run in Screen (manual)
 
-Wi-Fi refresh can be provided through netmuxd. Run netmuxd in place of the standard usbmuxd service as required by your setup, then run AltServer as a background service or daemon.
+GNU Screen keeps programs running after you disconnect from SSH, but **does not automatically restart them after a reboot**. From the directory containing `AltServer-aarch64`:
 
-For unattended re-signing over Wi-Fi, both netmuxd and AltServer can be run inside persistent `screen` sessions. This keeps the processes alive after you disconnect from SSH and allows AltStore to refresh apps over Wi-Fi without keeping an interactive terminal open.
+```bash
+screen -S altserver
+export ALTSERVER_ANISETTE_SERVER=http://127.0.0.1:6970
+./AltServer-aarch64
+```
+
+Detach with **Ctrl+A**, then **D**. Later reconnect with `screen -r altserver`.
+
+### Wi-Fi refresh with netmuxd
+
+Start netmuxd according to its installation instructions. On the tested setup, netmuxd provides Wi-Fi device connectivity for AltServer. To run netmuxd manually in Screen:
+
+```bash
+screen -S netmuxd
+/path/to/netmuxd
+```
+
+Replace `/path/to/netmuxd` with the actual executable path. Detach with **Ctrl+A**, then **D**. Do not run a competing usbmuxd instance if netmuxd is replacing it.
+
+### Automatic startup after reboot (systemd)
+
+For an unattended Orange Pi, **systemd is recommended instead of Screen**. An optional script installs service definitions for both AltServer and netmuxd:
+
+```bash
+chmod +x install-startup-services.sh
+sudo ALT_BIN=/absolute/path/to/AltServer-aarch64 \
+     NETMUXD_BIN=/absolute/path/to/netmuxd \
+     ./install-startup-services.sh
+```
+
+Use your actual executable paths. The script checks for a conflicting active `usbmuxd.service`, refuses to overwrite existing service definitions, and **creates but does not start** the services, so you can review them before switching from manually running Screen sessions.
+
+After checking `sudo systemctl cat netmuxd-26.service altserver-26.service`, stop any existing Screen instances running these programs and enable the services:
+
+```bash
+sudo systemctl enable --now netmuxd-26.service altserver-26.service
+systemctl status netmuxd-26.service altserver-26.service
+```
+
+The services will then be started automatically on future boots. To inspect logs, use `journalctl -u altserver-26.service -u netmuxd-26.service -f`. The startup helper is provided as a convenience and has not yet been validated on a clean installation; check the netmuxd service's arguments and your local usbmuxd arrangement before enabling it.
 
 ## Repository layout
 
