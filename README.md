@@ -12,22 +12,18 @@ The repository keeps the known-working patched AltServer, AltSign, and ldid sour
 
 This release was tested with [Anisette-Server-26](https://github.com/hroy123/Anisette-server-26), running in Docker on the same Orange Pi. AltServer ran directly on the host, and app installation and refresh were verified.
 
-## September 2026 Apple authentication
+## September 2026 Apple authentication and iOS 26 signing
 
-Apple's GrandSlam authentication flow has changed since the original AltServer-Linux implementation. The authentication code in this repository was updated to work with the current protocol.
+Apple's updated authentication and signing requirements required targeted changes to AltServer, AltSign, and ldid:
 
-The updated implementation completes the GrandSlam exchange, verifies the SRP server proof, derives the current SPD encryption keys from the raw SRP premaster secret, decrypts the SPD payload, and retrieves the application tokens used by AltServer.
+- **GrandSlam requests:** Use a fresh HTTP client for each request to avoid HTTP 429 errors caused by connection reuse.
+- **SRP authentication:** Verify Apple's server proof (M2) and handle the updated authentication exchange.
+- **SPD decryption:** Derive the AES key and IV using HMAC-SHA256 with the raw SRP premaster secret rather than the older 32-byte session key.
+- **Application tokens:** Recover the decrypted authentication information and request the application tokens used for signing and provisioning.
+- **iOS/iPadOS 26 signing:** Update ldid to generate the expected SHA-1/SHA-256 CodeDirectories, XML/DER entitlements, designated requirements, special-slot layout, CMS hash-agility attributes, and executable-segment flags, including nested components.
+- **Authentication timestamps:** Review time formatting and UTC handling across the authentication workflow to keep Apple client timestamps consistent.
 
-The existing anisette mechanism is retained, including support for a custom anisette server through the `ALTSERVER_ANISETTE_SERVER` environment variable.
-
-## iOS 26 code signing
-
-The bundled ldid implementation has been updated to generate signatures accepted by current iOS/iPadOS iPhone 26 devices.
-
-The signer generates SHA-1 and SHA-256 CodeDirectories, XML and DER entitlements, designated requirements, the required special-slot layout, and CMS hash-agility attributes expected by current Apple signing behavior.
-
-Executable-segment flags are also generated correctly for main executables and nested code. Nested frameworks and application components are signed using the behavior required by the parent application.
-
+The existing Anisette integration is retained through `ALTSERVER_ANISETTE_SERVER`. This build was tested with [Anisette-Server-26](https://github.com/hroy123/Anisette-server-26); Anisette-specific client identity and serial-header updates are maintained in that separate repository.
 
 ### Large IPA installs
 
