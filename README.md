@@ -137,7 +137,7 @@ Replace `/path/to/netmuxd` with the actual executable path. Detach with **Ctrl+A
 
 ### Automatic startup after reboot
 
-`systemd` can start AltServer and netmuxd automatically after reboot, either directly as services or within GNU Screen sessions. Screen is optional and allows reconnecting to the programs' interactive output.
+`systemd` can start AltServer and netmuxd automatically after reboot, either directly as services or within GNU Screen sessions. Screen is optional and allows reconnecting to the programs' interactive output (great for troubleshooting!).
 
 ## Credits
 
