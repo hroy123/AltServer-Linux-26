@@ -4,11 +4,13 @@ AltServer-Linux-26 is an updated version of [NyaMisty's AltServer-Linux](https:/
 
 This update also owes a great deal to the Rust-based [`isideload`](https://github.com/nab138/isideload) project and [`SideSign`](https://github.com/SideStore/SideSign), whose working implementations were instrumental in resolving the modern Apple authentication and iOS signing issues encountered here. AI-assisted analysis and coding were equally essential; without it, I would not have been able to carry a project like this through to completion.
 
-This project was developed and tested on an Orange Pi Zero 2 running AArch64 Debian/Armbian. The current source can authenticate with Apple, obtain application tokens, sign AltStore with an Apple development certificate, install it over USB, launch it on iPadOS 26, and support Wi-Fi refresh through netmuxd.
+This project was developed and tested on an Orange Pi Zero 2 running AArch64 Debian/Armbian. The current source can authenticate with Apple, obtain application tokens, sign AltStore with an Apple development certificate, install it over USB, launch it on iPadOS 26, and support Wi-Fi refresh through netmuxd or usbmuxd.
 
 The repository keeps the known-working patched AltServer, AltSign, and ldid source trees directly in the project so the exact code used for the successful build is preserved and can be reproduced from a fresh clone.
 
-## Apple authentication
+This release is fully functional when paired with Anisette-Serve-26 (add link), with both application loaded in Docker.
+
+## September 2026 Apple authentication
 
 Apple's GrandSlam authentication flow has changed since the original AltServer-Linux implementation. The authentication code in this repository was updated to work with the current protocol.
 
@@ -18,33 +20,12 @@ The existing anisette mechanism is retained, including support for a custom anis
 
 ## iOS 26 code signing
 
-The bundled ldid implementation has been updated to generate signatures accepted by current iOS/iPadOS 26 devices.
+The bundled ldid implementation has been updated to generate signatures accepted by current iOS/iPadOS iPhone 26 devices.
 
 The signer generates SHA-1 and SHA-256 CodeDirectories, XML and DER entitlements, designated requirements, the required special-slot layout, and CMS hash-agility attributes expected by current Apple signing behavior.
 
 Executable-segment flags are also generated correctly for main executables and nested code. Nested frameworks and application components are signed using the behavior required by the parent application.
 
-## Linux build changes
-
-The Linux build system has been adjusted to compile the known-working patched AltServer, AltSign, and ldid sources directly from this repository rather than regenerating them from older upstream source during each build.
-
-The linker configuration has also been updated for the tested AArch64 Linux build. Anisette client timestamps are generated as UTC.
-
-The upstream AltServer/AltSign tree is retained in `upstream_repo/` for headers, dependencies, and reference.
-
-## Current status
-
-The current source has been tested with:
-
-- Orange Pi Zero 2
-- AArch64 Debian/Armbian
-- iPadOS 26.6.1
-- Apple GrandSlam authentication
-- application-token retrieval
-- AltStore signing
-- USB installation through usbmuxd
-- successful AltStore launch
-- Wi-Fi refresh through netmuxd
 
 ### Large IPA installs
 
@@ -59,8 +40,6 @@ You can verify the new size with:
 ```bash
 df -h /tmp
 ```
-
-This was necessary for a large YouTube-based IPA whose main Mach-O executable was much larger than AltStore's.
 
 ## Compilation
 
