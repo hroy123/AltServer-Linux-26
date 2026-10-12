@@ -135,27 +135,9 @@ screen -S netmuxd
 
 Replace `/path/to/netmuxd` with the actual executable path. Detach with **Ctrl+A**, then **D**. Do not run a competing usbmuxd instance if netmuxd is replacing it.
 
-### Automatic startup after reboot (systemd)
+### Automatic startup after reboot
 
-For an unattended machine, **systemd is recommended instead of Screen**. An optional script installs service definitions for both AltServer and netmuxd:
-
-```bash
-chmod +x install-startup-services.sh
-sudo ALT_BIN=/absolute/path/to/AltServer-aarch64 \
-     NETMUXD_BIN=/absolute/path/to/netmuxd \
-     ./install-startup-services.sh
-```
-
-Use your actual executable paths. The script checks for a conflicting active `usbmuxd.service`, refuses to overwrite existing service definitions, and **creates but does not start** the services, so you can review them before switching from manually running Screen sessions.
-
-After checking `sudo systemctl cat netmuxd-26.service altserver-26.service`, stop any existing Screen instances running these programs and enable the services:
-
-```bash
-sudo systemctl enable --now netmuxd-26.service altserver-26.service
-systemctl status netmuxd-26.service altserver-26.service
-```
-
-The services will then be started automatically on future boots. To inspect logs, use `journalctl -u altserver-26.service -u netmuxd-26.service -f`. The startup helper is provided as a convenience and has not yet been validated on a clean installation; check the netmuxd service's arguments and your local usbmuxd arrangement before enabling it.
+`systemd` can start AltServer and netmuxd automatically after reboot, either directly as services or within GNU Screen sessions. Screen is optional and allows reconnecting to the programs' interactive output.
 
 ## Credits
 
