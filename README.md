@@ -10,7 +10,7 @@ This project was developed and tested on an Orange Pi Zero 2 running AArch64 Deb
 
 The repository keeps the known-working patched AltServer, AltSign, and ldid source trees directly in the project so the exact code used for the successful build is preserved and can be reproduced from a fresh clone.
 
-This release is fully functional when paired with Anisette-Serve-26 (add link), with both application loaded in Docker.
+This release was tested with [Anisette-Server-26](https://github.com/hroy123/Anisette-server-26), running in Docker on the same Orange Pi. AltServer ran directly on the host, and app installation and refresh were verified.
 
 ## September 2026 Apple authentication
 
