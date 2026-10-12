@@ -126,6 +126,8 @@ export ALTSERVER_ANISETTE_SERVER=http://127.0.0.1:6970
 
 Detach with **Ctrl+A**, then **D**. Later reconnect with `screen -r altserver`.
 
+**Automatic Screen sessions after reboot:** GNU Screen sessions can also be launched by **systemd user services** (`systemctl --user`), rather than started manually after each reboot. On the tested Orange Pi, enabled `altserver_screen.service` and `netmuxd_screen.service` launch their respective Screen sessions automatically; `loginctl enable-linger opi` allows those user services to start at boot without an interactive login. This preserves the convenience of `screen -r altserver` and `screen -r netmuxd` for viewing their output. This is the working startup arrangement on the test system; the optional system-level startup script below is an alternative, not an additional requirement.
+
 ### Wi-Fi refresh with netmuxd
 
 Start netmuxd according to its installation instructions. On the tested setup, netmuxd provides Wi-Fi device connectivity for AltServer. To run netmuxd manually in Screen:
