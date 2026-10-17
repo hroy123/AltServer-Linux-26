@@ -4,6 +4,8 @@
 
 **Observed authentication errors:** The original Android/CoreADI-based Anisette setup began receiving GrandSlam error **`-80045`**. Switching to **Windows-derived Anisette data** (using an external Windows Anisette bridge) changed the initial GrandSlam error to **`-22421`** (`This action could not be completed. Try again.`), but did **not** restore successful authentication. These codes are observed responses; their precise internal meanings have not been confirmed. The documentation below describes the previously working setup and should not be taken as confirmation of current compatibility.
 
+———---——-
+
 AltServer-Linux-26 is an updated version of [NyaMisty's AltServer-Linux](https://github.com/NyaMisty/AltServer-Linux) for current Apple authentication and iOS/iPadOS 26 signing requirements.
 
 **Companion project:** [Anisette-Server-26](https://github.com/hroy123/Anisette-server-26), the tested Anisette server for this AltServer build.
