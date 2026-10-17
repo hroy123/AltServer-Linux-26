@@ -1,6 +1,8 @@
 # AltServer-Linux-26
 
-**IMPORTANT — CURRENTLY NOT FUNCTIONAL (October 2026):** AltServer-Linux-26 and its companion Anisette-Server-26 were previously fully functional and successfully used to install and refresh AltStore on iOS/iPadOS 26. Following Apple's latest authentication changes in October 2026, this setup no longer completes Apple ID authentication (GrandSlam errors). The successful tests and instructions below document the previously working configuration; compatibility with Apple's current authentication requirements has not yet been restored.
+**IMPORTANT — CURRENTLY NOT FUNCTIONAL (October 2026):** AltServer-Linux-26 and its companion Anisette-Server-26 were previously functional, including installing and refreshing AltStore on iOS/iPadOS 26. Following changes to Apple's authentication requirements in October 2026, Apple ID authentication no longer completes.
+
+**Observed authentication errors:** The original Android/CoreADI-based Anisette setup began receiving GrandSlam error **`-80045`**. Switching to **Windows-derived Anisette data** (using an external Windows Anisette bridge) changed the initial GrandSlam error to **`-22421`** (`This action could not be completed. Try again.`), but did **not** restore successful authentication. These codes are observed responses; their precise internal meanings have not been confirmed. The documentation below describes the previously working setup and should not be taken as confirmation of current compatibility.
 
 AltServer-Linux-26 is an updated version of [NyaMisty's AltServer-Linux](https://github.com/NyaMisty/AltServer-Linux) for current Apple authentication and iOS/iPadOS 26 signing requirements.
 
